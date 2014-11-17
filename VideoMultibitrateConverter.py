@@ -78,8 +78,8 @@ def EncodeMultibitrateStream (config,inFile):
 				os.makedirs(config["out"]+"/mp4")
 				outfolder = config["out"]+"/mp4"
 			except :
-				print "cant create " + config["out"]/mp4 + "Access fobident"
-				logging.debug("cant create " + config["out"]/mp4 + "Access fobident")
+				print "cant create " + config["out"]+"/mp4" + "Access fobident"
+				logging.debug("cant create " + config["out"]+"/mp4" + "Access fobident")
 				return False
 		else :
 			outfolder = config["out"]+"/mp4"
@@ -177,10 +177,67 @@ def ConvertMP4 (config,streamlist):
 
 # Conver to multibitrate HLS stream
 def ConvertHLS (config,streamlist):
+	#ffmpeg -re -i $out_folder/mp4/audio64k.mp4 -i $out_folder/mp4/video0200.mp4  
+	#-map 0:0 -codec:v copy -map 1:0 -codec:a copy -vbsf h264_mp4toannexb -flags -global_header  
+	#-f segment -segment_list $out_folder/hls/playlist_264k.m3u8  -segment_time 10 
+	#-segment_format mpegts $out_folder/hls/media_264_%03d.ts
 	print config
+	#create folder for HLS 
+	if not os.path.exists(config["out"]+"/hls" ):
+		try :
+			os.makedirs(config["out"]+"/hls")
+		except :
+			print "cant create " + config["out"]+"/hls" + "Access fobident"
+			logging.debug("cant create " + config["out"]+"/mp4" + "Access fobident")
+	command =  [config["ffmpeg"] ]
+	# procesing HLS all bitrate
+	for hls in config ['hls']:
+		bitrate = int (hls['vbitrate']) +  int(hls['vbitrate']) 
+		if not os.path.exists(config["out"]+"/hls/"+hls['vbitrate'] ):
+			try :
+				os.makedirs(config["out"]+"/hls/"+hls['vbitrate'])
+			except :
+				print "cant create " + config["out"]+"/hls/"  +hls['vbitrate']+ "Access fobident"
+				logging.debug("cant create " + config["out"]+"/hls/" +hls['vbitrate'] + "Access fobident")
+		# create command for ffmpeg
+		print streamlist
+		print hls
+		command =  [config["ffmpeg"],"-re", "-i" ]
+		command.append (streamlist[1][hls['aStreamID']])
+		command.append ("-i")
+		command.append (streamlist[0][hls['vStreamID']])
+		command = command + ["-map","0:0","-codec:v","copy","-map","1:0","-codec:a","copy","-vbsf","h264_mp4toannexb","-flags","-global_header","-f","segment","-segment_list"]
+		command.append ( config["out"]+"/hls/" +hls['vbitrate'] +"/playlist_"+str (bitrate) + ".m3u8" )
+		command = command + ["-segment_time","10","-segment_format","mpegts"]
+		command.append (config["out"]+"/hls/" +hls['vbitrate']+"/media_"+str (bitrate)+"_%05d.ts")
+		print command
+		logging.debug(command)
+		process = subprocess.Popen(command, stdout=subprocess.PIPE)
+		out, err = process.communicate()
+		StreamInfoTest = GetStreamInfo (config['ffprobe'],config["out"]+"/hls/" +hls['vbitrate'] +"/playlist_"+str(bitrate) + ".m3u8")
+		if StreamInfoTest :
+			logging.debug("HLS processing of " + hls['name'] + "is OK!!!!")
+			print "HLS processing of " + hls['name'] + "is OK!!!!"
+			
+			
+		else :
+			logging.debug("HLS processing of " + hls['name']  + "Fail!!!!")
+			print "HLS processing of " + hls['name']  + "Fail!!!!"
+		
 
 def ConvertThumb (onfig,inFile):
 	print config
+	
+
+def HLS_AES128 (folder):
+	command = ["openssl", "rand", "16"]
+	process = subprocess.Popen(command, stdout=subprocess.PIPE)
+	key, err = process.communicate()
+	KeyFile =  open (folder +  "/video.key", "wb")
+	KeyFile.write(key)
+	for file in os.listdir(folder):
+		if os.path.splitext(file)[1] == ".ts":
+			print 1
 
 def main (config,argv):
 	inFile = ''
@@ -210,6 +267,7 @@ def main (config,argv):
 		print streamlist
 		mp4 = ConvertMP4 (config,streamlist)
 		print "multibitrate MP$" , mp4
+		ConvertHLS (config,streamlist)
 
 
 

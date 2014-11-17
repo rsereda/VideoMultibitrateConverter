@@ -1,6 +1,6 @@
 {
-    "out": "/tmp",
-    "log": "/log.log",
+    "out": "/home/rsereda/python/VideoMultibitrateConverter/tmp",
+    "log": "/home/rsereda/python/VideoMultibitrateConverter/tmp/log.log",
     "ffmpeg": "/usr/bin/ffmpeg",
     "ffprobe": "/usr/bin/ffprobe",
     "hls": true,
@@ -9,6 +9,7 @@
     "video_streams": [
         {
             "name": "416x234 -aspect 416:234 -vcodec libx264 -b:v  200k -profile:v baseline -r 12 -level 3.0",
+            "vStreamID" : 0,
             "codec": "libx264",
             "screen_size": "416x234",
             "aspect": "416:234",
@@ -19,9 +20,10 @@
         },
         {
             "name": "480x270 -aspect 480:270 -vcodec libx264 -b:v  400k -profile:v baseline -r 15 -level 3.0",
+            "vStreamID" : 1,
             "codec": "libx264",
             "screen_size": "480x270",
-            "aspect": "480x270",
+            "aspect": "480:270",
             "bitrate": "400k",
             "profile": "baseline",
             "framerate": "15",
@@ -29,6 +31,7 @@
         },
         {
             "name": "640x360 -aspect 640:360 -vcodec libx264 -b:v  600k -profile:v baseline -r 29.97 -level 3.0",
+            "vStreamID" : 2,
             "codec": "libx264",
             "screen_size": "640x360",
             "aspect": "640:360",
@@ -39,6 +42,7 @@
         },
         {
             "name": "640x360 -aspect 640:360 -vcodec libx264 -b:v  1200k -profile:v baseline -r 29.97 -level 3.1",
+            "vStreamID" : 3,
             "codec": "libx264",
             "screen_size": "640x360",
             "aspect": "640:360",
@@ -51,6 +55,7 @@
     "audio_streams": [
         {
             "name": "-acodec  libfdk_aac -b:a 64k -ar 44100 -ac 2",
+            "aStreamID" : 0,
             "codec": "libfdk_aac",
             "bitrate": "64k",
             "sampling_rate": "44100",
@@ -58,10 +63,37 @@
         },
         {
             "name": "libfdk_aac -b:a 96k -ar 44100 -ac 2",
+            "vStreamID" : 1,
             "codec": "libfdk_aac",
             "bitrate": "96k",
             "sampling_rate": "44100",
             "ac": "2"
         }
+    ],
+    "hls": [
+			{"name": "audio bitrate 64 video bitrate 200",
+			"vbitrate": "200",
+			"abitrate": "64",
+			"vStreamID": 0,
+			"aStreamID": 0
+			},
+			{"name": "audio bitrate 64 video bitrate 400",
+			"vbitrate": "400",
+			"abitrate": "64",
+			"vStreamID": 1,
+			"aStreamID": 0
+			},
+			{"name": "audio bitrate 64 video bitrate 600",
+			"vbitrate": "600",
+			"abitrate": "64",
+			"vStreamID": 2,
+			"aStreamID": 0
+			},
+			{"name": "audio bitrate 64 video bitrate 1200",
+			"vbitrate": "1200",
+			"abitrate": "96",
+			"vStreamID": 3,
+			"aStreamID": 1
+			}
     ]
 }
