@@ -66,21 +66,10 @@ def EncodeMultibitrateStream (config,inFile):
 				streamAudioID = streamAudioID + [stream ['index']]
 		print streamVideoID , streamAudioID
 		# get stream trancode config and prepare comanf for ffmpeg
-		if not os.path.exists(config["out"] ):
-			try :
-				os.makedirs(config["out"])
-			except :
-				print "cant create " + config["out"] + "Access fobident"
-				logging.debug("cant create " + config["out"] + "Access fobident")
-				return False
-		if not os.path.exists(config["out"]+"/mp4" ):
-			try :
-				os.makedirs(config["out"]+"/mp4")
-				outfolder = config["out"]+"/mp4"
-			except :
-				print "cant create " + config["out"]+"/mp4" + "Access fobident"
-				logging.debug("cant create " + config["out"]+"/mp4" + "Access fobident")
-				return False
+		if not folder_create (config["out"]):
+			return False
+		if not folder_create (config["out"]+"/mp4" ):
+			return False
 		else :
 			outfolder = config["out"]+"/mp4"
 		#Video stream processing
@@ -92,8 +81,6 @@ def EncodeMultibitrateStream (config,inFile):
 			out, err = process.communicate()
 			StreamInfoTest = GetStreamInfo (config['ffprobe'],outfolder + "/video" + streamconf["bitrate"] + ".mp4")
 			if StreamInfoTest :
-				logging.debug("Video processing of " + streamconf["bitrate"] + "is OK!!!!")
-				print "Video processing of " + streamconf["bitrate"] + "is OK!!!!"
 				streamlist[0].append (outfolder + "/video" + streamconf["bitrate"] + ".mp4" )
 			else :
 				logging.debug("Video processing of " + streamconf["bitrate"] + "Fail!!!!")
@@ -108,14 +95,13 @@ def EncodeMultibitrateStream (config,inFile):
 			out, err = process.communicate()
 			StreamInfoTest = GetStreamInfo (config['ffprobe'],outfolder + "/audio" + streamconf["bitrate"] + ".mp4")
 			if StreamInfoTest :
-				logging.debug("Audio processing of " + streamconf["bitrate"] + "is OK!!!!")
-				print "Audio processing of " + streamconf["bitrate"] + "is OK!!!!"
 				streamlist[1].append( outfolder + "/audio" + streamconf["bitrate"] + ".mp4" )
 			else :
 				logging.debug("Audioo processing of " + streamconf["bitrate"] + "Fail!!!!")
 				print "Audio processing of " + streamconf["bitrate"] + "Fail!!!!"
 		return streamlist
 	else :
+		print "!!!!!!!!!!!!!!!!!!!!!!!!"
 		return False
 
 
@@ -170,6 +156,7 @@ def ConvertMP4 (config,streamlist):
 		print "Multibitrete processing of "  + "is OK!!!!"
 		return config['out'] + "/mp4/multibitrate.mp4"
 	else :
+		print "Multibitrete processing of "  + "False!!!!"
 		return False
 
 
@@ -183,22 +170,17 @@ def ConvertHLS (config,streamlist):
 	#-segment_format mpegts $out_folder/hls/media_264_%03d.ts
 	print config
 	#create folder for HLS 
-	if not os.path.exists(config["out"]+"/hls" ):
-		try :
-			os.makedirs(config["out"]+"/hls")
-		except :
-			print "cant create " + config["out"]+"/hls" + "Access fobident"
-			logging.debug("cant create " + config["out"]+"/mp4" + "Access fobident")
+	if folder_create (config["out"]+"/hls"):
+		print 123
+	if config ['hls']:
+		folder_create (config["out"]+"/hls-aes128")
 	command =  [config["ffmpeg"] ]
 	# procesing HLS all bitrate
 	for hls in config ['hls']:
-		bitrate = int (hls['vbitrate']) +  int(hls['vbitrate']) 
-		if not os.path.exists(config["out"]+"/hls/"+hls['vbitrate'] ):
-			try :
-				os.makedirs(config["out"]+"/hls/"+hls['vbitrate'])
-			except :
-				print "cant create " + config["out"]+"/hls/"  +hls['vbitrate']+ "Access fobident"
-				logging.debug("cant create " + config["out"]+"/hls/" +hls['vbitrate'] + "Access fobident")
+		bitrate = int (hls['vbitrate']) +  int(hls['vbitrate'])
+		folder_create (config["out"]+"/hls/"+hls['vbitrate'])
+		if config['aes128']:
+			folder_create (config["out"]+"/hls-aes128/"+hls['vbitrate'])
 		# create command for ffmpeg
 		print streamlist
 		print hls
@@ -214,30 +196,93 @@ def ConvertHLS (config,streamlist):
 		logging.debug(command)
 		process = subprocess.Popen(command, stdout=subprocess.PIPE)
 		out, err = process.communicate()
-		StreamInfoTest = GetStreamInfo (config['ffprobe'],config["out"]+"/hls/" +hls['vbitrate'] +"/playlist_"+str(bitrate) + ".m3u8")
-		if StreamInfoTest :
+		if GetStreamInfo (config['ffprobe'],config["out"]+"/hls/" +hls['vbitrate'] +"/playlist_"+str(bitrate) + ".m3u8") :
 			logging.debug("HLS processing of " + hls['name'] + "is OK!!!!")
 			print "HLS processing of " + hls['name'] + "is OK!!!!"
-			
-			
+			if config ['aes128']:
+				HLS_AES128 (config["out"]+"/hls/"+hls['vbitrate'],config["out"]+"/hls-aes128/"+hls['vbitrate'])
 		else :
 			logging.debug("HLS processing of " + hls['name']  + "Fail!!!!")
 			print "HLS processing of " + hls['name']  + "Fail!!!!"
-		
 
-def ConvertThumb (onfig,inFile):
+
+
+def ConvertThumb (config, inFile):
 	print config
-	
+	folder_create (config["out"]+"/Thumb/")
+	#ffmpeg -ss 5 -i myvideo.avi -f image2 -vf fps=fps=1/60 img%03d.jpg
+	StreamInfo = GetStreamInfo (config['ffprobe'],inFile)
+	print StreamInfo["format"]["duration"]
+	command =  [config["ffmpeg"],"-ss","5", "-i" ,inFile, "-f", "image2", "-vf", "fps=fps=1/60", config["out"]+"/Thumb/img%03d.jpg"]
+	logging.debug(command)
+	process = subprocess.Popen(command, stdout=subprocess.PIPE)
+	out, err = process.communicate()
+	if os.path.isfile(config["out"]+"/Thumb/img001.jpg"):
+		logging.debug("Thumb processing of "  + " is OK!!!!")
+		print "Thumb  processing of "  + " is OK!!!!"
+	else:
+		return False
 
-def HLS_AES128 (folder):
-	command = ["openssl", "rand", "16"]
+def HLS_AES128 (ifolder,ofolder):
+	command = ["openssl", "rand", "16" ]
 	process = subprocess.Popen(command, stdout=subprocess.PIPE)
 	key, err = process.communicate()
-	KeyFile =  open (folder +  "/video.key", "wb")
+	print key.encode('hex')
+	KeyFile =  open ( ofolder + "/video.key", "wb")
 	KeyFile.write(key)
-	for file in os.listdir(folder):
+	KeyFile.close()
+	iv = 0
+	#openssl aes-128-cbc -e -in ${splitFilePrefix}$i.ts -out ${encryptedSplitFilePrefix}$i.ts -nosalt -iv $initializationVector -K $encryptionKey
+	for file in os.listdir(ifolder):
 		if os.path.splitext(file)[1] == ".ts":
-			print 1
+			command = ["openssl", "aes-128-cbc", "-e",  "-in"]
+			command = command + [ifolder+"/"+ file, "-out", ofolder+"/"+ file, "-nosalt", "-iv", '%032x' %  iv,"-K" , key.encode("hex")  ]
+			iv = iv +1
+			print command
+			process = subprocess.Popen(command, stdout=subprocess.PIPE)
+			out, err = process.communicate()
+			print out
+		else:
+			encryptedplaylist =os.path.splitext(file)[0]+"enc.m3u8"
+			with open(ifolder +"/" + file ) as f_old, open(ofolder +"/" + encryptedplaylist , "w") as f_new:
+				for line in f_old:
+					f_new.write(line)
+					if '#EXT-X-TARGETDURATION' in line:
+						f_new.write('#EXT-X-KEY:METHOD=AES-128,URI="video.key",IV=0x00000000000000000000000000000000\n')
+	if GetStreamInfo (config['ffprobe'],ofolder +"/" + encryptedplaylist) :
+		logging.debug("HLS processing of " + ofolder +"/" + encryptedplaylist + "is OK!!!!")
+		print "HLS processing of " + ofolder +"/" + encryptedplaylist+ "is OK!!!!"
+		return ofolder +"/" + encryptedplaylist
+	else :
+		logging.debug("HLS processing of " + ofolder +"/" + encryptedplaylist  + "Fail!!!!")
+		print "HLS processing of " + ofolder +"/" + encryptedplaylist  + "Fail!!!!"
+		return False
+
+def folder_create (folder):
+	if not os.path.exists(folder ):
+		try :
+			os.makedirs(folder)
+			print folder
+			return True
+			
+		except :
+			print "cant create " + folder+ " Access fobident"
+			logging.debug("cant create " + folder+ " Access fobident")
+			return False
+	else: 
+		return True
+
+
+def bytes_from_file(filename, chunksize=16):
+	with open(filename, "rb") as f:
+		while True:
+			chunk = f.read(chunksize)
+			if chunk:
+				return chunk
+			else:
+				break
+
+
 
 def main (config,argv):
 	inFile = ''
@@ -262,8 +307,10 @@ def main (config,argv):
 	print 'Input file is "', inFile
 	print 'Stream name is "', StreamName
 	config['out'] = config['out'] +"/"+ str(StreamName)
+	print config
 	streamlist = EncodeMultibitrateStream (config,inFile)
 	if streamlist :
+		ConvertThumb (config, inFile)
 		print streamlist
 		mp4 = ConvertMP4 (config,streamlist)
 		print "multibitrate MP$" , mp4
