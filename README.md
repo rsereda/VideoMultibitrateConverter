@@ -10,7 +10,7 @@ Thunb of video
 
 Usage ./VideoMultibitrateConverter -i <filename> -s <streamname>
 
-<filename> - vide file with audio that can be play
+<filename> - video file with audio that can be play
 <streamname> - name of folder that will store all output
 ====================
 
