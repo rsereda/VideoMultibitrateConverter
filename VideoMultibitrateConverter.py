@@ -6,7 +6,7 @@
 #
 
 #script run
-#./VideoMultibitrateConverter.py <filename> <streamname>
+#./VideoMultibitrateConverter.py -i <filename> -s <streamname>
 
 import json
 import os.path
