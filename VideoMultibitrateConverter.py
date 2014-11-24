@@ -88,7 +88,7 @@ def EncodeMultibitrateStream (config,inFile):
 		#Audio streams processing
 		streamid = 0
 		for streamconf in config["audio_streams"]:
-			command =  [config["ffmpeg"] ,"-i" , inFile , "-map", "0:"+str(streamAudioID[0]),   "-acodec" , streamconf["codec"], "-b:a" ,streamconf["bitrate"] , "-ar", streamconf["sampling_rate"], "-ac", str (streamconf["ac"]) ,"-f", "mp4", str(outfolder) + "/audio" + streamconf["bitrate"] + ".mp4" ]
+			command =  [config["ffmpeg"] ,"-i" , inFile , "-map", "0:"+str(streamAudioID[0]),   "-acodec" , streamconf["codec"],"-strict", "-2", "-b:a" ,streamconf["bitrate"] , "-ar", streamconf["sampling_rate"], "-ac", str (streamconf["ac"]) ,"-f", "mp4", str(outfolder) + "/audio" + streamconf["bitrate"] + ".mp4" ]
 			print command
 			logging.debug(command)
 			process = subprocess.Popen(command, stdout=subprocess.PIPE)

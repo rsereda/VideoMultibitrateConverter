@@ -56,7 +56,7 @@
         {
             "name": "-acodec  libfdk_aac -b:a 64k -ar 44100 -ac 2",
             "aStreamID" : 0,
-            "codec": "libfdk_aac",
+            "codec": "aac",
             "bitrate": "64k",
             "sampling_rate": "44100",
             "ac": "2"
@@ -64,7 +64,7 @@
         {
             "name": "libfdk_aac -b:a 96k -ar 44100 -ac 2",
             "vStreamID" : 1,
-            "codec": "libfdk_aac",
+            "codec": "aac",
             "bitrate": "96k",
             "sampling_rate": "44100",
             "ac": "2"
